@@ -77,11 +77,8 @@ function newBoth(part1: boolean = false): number {
           validGame = amount <= 14;
         }
       }
-
       if (!validGame && part1) break;
-
     }
-
     if (validGame) total += idx + 1;
     part2Total += [...max].reduce((acc, cur) => acc * cur, 1);
   });

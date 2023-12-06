@@ -1,6 +1,6 @@
 import { readFile } from './helpers';
 
-const grid: string[][] = readFile('day3_in.txt').map((val) => val.split(''));
+const grid: string[][] = readFile('input.txt').map((val) => val.split(''));
 
 const NON_SYMBOLS: string = '0123456789.';
 
@@ -10,7 +10,7 @@ function detectValidity(num: string[], rowIndex: number, startColIndex: number):
   console.log(num);
   for (let idx = 0; idx < num.length; idx++) {
     var [corner1, corner2, side, top, bot]: boolean[] = [false, false, false, false, false]; // false means no special char
-    console.log(idx, num[idx]);
+    //console.log(idx, num[idx]);
     var colIndex: number = startColIndex + idx;
     if (idx == 0) { // first element, have to check up to 3 extra spots
       // FIRST ELEMENT
@@ -26,6 +26,25 @@ function detectValidity(num: string[], rowIndex: number, startColIndex: number):
 
       // check if this target makes it valid
       valid = corner1 || corner2 || side;
+      if (num[0] == "2" && num[1] == "7" && num[2] == "4") {
+        console.log("rowIndex", rowIndex);
+        console.log("colIndex", colIndex);
+        console.log("I am: ", num[idx]);
+        console.log("side: ", grid[rowIndex][colIndex - 1]);
+        console.log("side: ", side);
+        console.log([
+          "corner1",
+          corner1,
+          "corner2",
+          corner2,
+          "side",
+          side,
+          "top",
+          top,
+          "bot",
+          bot,
+        ]);
+      }
       console.log(`valid: ${valid}`);
       if (valid) return true;
 
@@ -45,6 +64,25 @@ function detectValidity(num: string[], rowIndex: number, startColIndex: number):
 
       // check if this target makes it valid
       valid = corner1 || corner2 || side;
+      if (num[0] == "2" && num[1] == "7" && num[2] == "4") {
+        console.log("rowIndex", rowIndex);
+        console.log("colIndex", colIndex);
+        console.log("I am: ", num[idx]);
+        console.log("side: ", grid[rowIndex][colIndex]);
+        console.log("side: ", side);
+        console.log([
+          "corner1",
+          corner1,
+          "corner2",
+          corner2,
+          "side",
+          side,
+          "top",
+          top,
+          "bot",
+          bot,
+        ]);
+      }
       console.log(`end valid: ${valid}`);
       if (valid) return true;
     }
@@ -75,7 +113,7 @@ function part1(): number {
       const numOnEnd: boolean = idx == row.length - 1 && onNum;
       if ((num.length > 0 && !onNum) || numOnEnd) {
         // if length > 0, means I have found a complete number, now process
-        const startPos: number = idx - num.length;
+        const startPos: number = idx - num.length + Number(numOnEnd);
         validNum = detectValidity(num, rowIdx, startPos);
         if (validNum) {
           console.log('this boi valid' + Number(num.join('')));
@@ -91,4 +129,3 @@ function part1(): number {
 }
 
 console.log(`Part 1: ${part1()}`);
-for (let i = 0; i < grid.length; i++) console.log(grid[i].length)

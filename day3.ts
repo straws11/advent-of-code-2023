@@ -1,131 +1,118 @@
 import { readFile } from './helpers';
 
-const grid: string[][] = readFile('input.txt').map((val) => val.split(''));
+const NON_VALID: string = '0123456789.';
 
-const NON_SYMBOLS: string = '0123456789.';
+interface Coord {
+  x: number;
+  y: number;
+}
 
-function detectValidity(num: string[], rowIndex: number, startColIndex: number): boolean {
-  //Determine if the string num has at least one surrounding symbol
-  var valid: boolean = false;
-  console.log(num);
-  for (let idx = 0; idx < num.length; idx++) {
-    var [corner1, corner2, side, top, bot]: boolean[] = [false, false, false, false, false]; // false means no special char
-    //console.log(idx, num[idx]);
-    var colIndex: number = startColIndex + idx;
-    if (idx == 0) { // first element, have to check up to 3 extra spots
-      // FIRST ELEMENT
-      if (rowIndex != 0 && colIndex != 0) { //can check top left corner
-        corner1 = !NON_SYMBOLS.includes(grid[rowIndex - 1][colIndex - 1]);
-        console.log(`corner1: ${corner1}`);
+interface NumObj {
+  val: number;
+  length: number;
+  startPos: Coord;
+  endPos: Coord;
+  valid: boolean;
+  determineValid(grid: string[][]): boolean;
+}
+
+class CustomNumber implements NumObj {
+  val: number;
+  length: number;
+  startPos: Coord;
+  endPos: Coord;
+  valid: boolean;
+
+  constructor(val: number, start: Coord, end: Coord) {
+    this.val = val;
+    this.length = val.toString().length;
+    this.startPos = start;
+    this.endPos = end;
+    this.valid = this.determineValid(grid);
+  }
+
+  determineValid(grid: string[][]): boolean {
+    var neighbours: string[] = [];
+    //top row
+    if (this.startPos.y > 0) {
+      let posY: number = this.startPos.y - 1;
+      let startIdx: number = this.startPos.x > 0 ? -1 : 0;
+      let endIdx: number = this.endPos.x > grid.length - 1 ? 1 : 0;
+      for (let i = startIdx; i < this.length + 1 + endIdx; i++) {
+        const posX: number = this.startPos.x + i;
+        const char: string = grid[posY][posX];
+        neighbours.push(char);
       }
-      if (rowIndex != grid.length - 1 && colIndex != 0) { //can check bottom left corner
-        corner2 = !NON_SYMBOLS.includes(grid[rowIndex + 1][colIndex - 1]);
-        console.log(`corner2: ${corner2}`);
-      }
-      if (colIndex != 0) side = !NON_SYMBOLS.includes(grid[rowIndex][colIndex - 1]);
-
-      // check if this target makes it valid
-      valid = corner1 || corner2 || side;
-      if (num[0] == "2" && num[1] == "7" && num[2] == "4") {
-        console.log("rowIndex", rowIndex);
-        console.log("colIndex", colIndex);
-        console.log("I am: ", num[idx]);
-        console.log("side: ", grid[rowIndex][colIndex - 1]);
-        console.log("side: ", side);
-        console.log([
-          "corner1",
-          corner1,
-          "corner2",
-          corner2,
-          "side",
-          side,
-          "top",
-          top,
-          "bot",
-          bot,
-        ]);
-      }
-      console.log(`valid: ${valid}`);
-      if (valid) return true;
-
     }
 
-    if (idx == num.length - 1) { // last element, check up to 3 extra spots (not else because 1 element items exist)
-      // LAST ELEMENT
-      if (rowIndex != 0 && colIndex != grid[0].length - 1) { //can check top right corner
-        corner1 = !NON_SYMBOLS.includes(grid[rowIndex - 1][colIndex + 1]);
-        console.log(`again corner1: ${corner1}`);
+    //bottom row
+    if (this.startPos.y < grid.length - 1) {
+      let posY: number = this.startPos.y + 1;
+      let startIdx: number = this.startPos.x > 0 ? -1 : 0;
+      let endIdx: number = this.endPos.x > grid.length - 1 ? 1 : 0;
+      for (let i = startIdx; i < this.length + 1 + endIdx; i++) {
+        const posX: number = this.startPos.x + i;
+        neighbours.push(grid[posY][posX]);
       }
-      if (rowIndex != grid.length - 1 && colIndex != grid[0].length - 1) {//can check bottom right corner
-        corner2 = !NON_SYMBOLS.includes(grid[rowIndex + 1][colIndex + 1]);
-        console.log(`again corner2: ${corner2}`);
-      }
-      if (colIndex != grid.length - 1) side = !NON_SYMBOLS.includes(grid[rowIndex][colIndex + 1]);
-
-      // check if this target makes it valid
-      valid = corner1 || corner2 || side;
-      if (num[0] == "2" && num[1] == "7" && num[2] == "4") {
-        console.log("rowIndex", rowIndex);
-        console.log("colIndex", colIndex);
-        console.log("I am: ", num[idx]);
-        console.log("side: ", grid[rowIndex][colIndex]);
-        console.log("side: ", side);
-        console.log([
-          "corner1",
-          corner1,
-          "corner2",
-          corner2,
-          "side",
-          side,
-          "top",
-          top,
-          "bot",
-          bot,
-        ]);
-      }
-      console.log(`end valid: ${valid}`);
-      if (valid) return true;
+    }
+    //sides
+    if (this.startPos.x > 0) {
+      neighbours.push(
+        grid[this.startPos.y][this.startPos.x - 1]
+      );
+    }
+    if (this.endPos.x < grid.length - 1) {
+      neighbours.push(
+        grid[this.startPos.y][this.endPos.x + 1]
+      );
     }
 
-    // check below and above, this goes for all pieces
-    if (rowIndex != 0) top = !NON_SYMBOLS.includes(grid[rowIndex - 1][colIndex]);
-    if (rowIndex != grid[0].length - 1) bot = !NON_SYMBOLS.includes(grid[rowIndex + 1][colIndex]);
-    valid = top || bot; // outside chars were already returned if true above, this won't override anything
+    const validNeighbours: string[] = neighbours.filter((val) => val != undefined);
 
-    console.log(`full check this char valid: ${valid}`);
-    if (valid) return true;
+    for (const neighbour of validNeighbours) {
+      if (!NON_VALID.includes(neighbour)) return true;
+    }
+    return false;
 
   }
 
-  return false;
 }
 
-function part1(): number {
-  var total: number = 0;
 
-  grid.forEach((row, rowIdx) => {
+
+const contents: string[] = readFile('day3_in.txt');
+const grid: string[][] = contents.map((val) => val.split(''));
+
+function part1(): number {
+  //console.log(grid);
+  var allNums: CustomNumber[] = [];
+  grid.forEach((line, lineIndex) => {
+    var num: string = '';
     var onNum: boolean = false;
-    var num: string[] = [];
-    var validNum: boolean = false;
-    row.forEach((val, idx) => {
-      onNum = NON_SYMBOLS.slice(0, 10).includes(val);
-      if (onNum) num.push(val);  // value is a number
-      const numOnEnd: boolean = idx == row.length - 1 && onNum;
-      if ((num.length > 0 && !onNum) || numOnEnd) {
-        // if length > 0, means I have found a complete number, now process
-        const startPos: number = idx - num.length + Number(numOnEnd);
-        validNum = detectValidity(num, rowIdx, startPos);
-        if (validNum) {
-          console.log('this boi valid' + Number(num.join('')));
-          total += Number(num.join(''));
-          console.log("NEW TOTTTTTTTTTTAAAAAAAAAAAAAAL: " + total);
+    line.forEach((char, idx) => {
+      onNum = NON_VALID.slice(0, 10).includes(char);
+      if (onNum) num += char;
+      if (num.length > 0 && (!onNum || idx == line.length - 1)) {
+        let startPos: Coord = { x: 0, y: 0 };
+        let endPos: Coord = { x: 0, y: 0 };
+        if (onNum) { // last char of the line, indexing a bit different
+          startPos = { x: idx - num.length + 1, y: lineIndex };
+          endPos = { x: idx, y: lineIndex };
+        } else {
+          startPos = { x: idx - num.length, y: lineIndex };
+          endPos = { x: idx - 1, y: lineIndex }
         }
-        num = [];
+
+        const partNumber = new CustomNumber(Number(num), startPos, endPos);
+        allNums.push(partNumber);
+        num = '';
       }
     });
   });
 
+  console.log(allNums);
+  const total: number = allNums.filter((obj) => obj.valid).reduce((acc, cur) => acc + cur.val, 0);
   return total;
 }
 
-console.log(`Part 1: ${part1()}`);
+console.log(`Part1: ${part1()}`);
